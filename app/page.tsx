@@ -16,7 +16,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Link 
               href="/schedule"
               className="inline-flex items-center justify-center px-8 py-4 text-xl bg-blue-600 text-white rounded-xl hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 shadow-md hover:shadow-lg transition-all"
@@ -48,7 +48,18 @@ export default function Home() {
           {/* SMS Opt-in Section */}
           <div className="border-t pt-12">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">For Missionaries</h2>
-            <SMSOptIn />
+            <div className="space-y-8">
+              <Link 
+                href="/appointments"
+                className="inline-flex items-center justify-center px-8 py-4 text-xl bg-blue-600 text-white rounded-xl hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 shadow-md hover:shadow-lg transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>View All Appointments</span>
+              </Link>
+              <SMSOptIn />
+            </div>
           </div>
         </div>
       </div>
