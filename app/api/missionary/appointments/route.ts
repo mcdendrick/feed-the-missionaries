@@ -1,14 +1,25 @@
 import { NextResponse } from 'next/server';
 import { getScheduledEvents, getInviteeDetails } from '@/app/utils/calendly';
 
+// Keep track of valid session tokens
+const validSessions = new Set<string>();
+
+export function addValidSession(token: string) {
+  validSessions.add(token);
+  // Expire the token after 24 hours
+  setTimeout(() => {
+    validSessions.delete(token);
+  }, 24 * 60 * 60 * 1000);
+}
+
 export async function POST(request: Request) {
   try {
-    const { password } = await request.json();
+    const { sessionToken } = await request.json();
     
-    // Verify the missionary password
-    if (password !== process.env.NEXT_PUBLIC_MISSIONARY_ACCESS_CODE) {
+    // Verify the session token
+    if (!validSessions.has(sessionToken)) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Session expired. Please log in again.' },
         { status: 401 }
       );
     }

@@ -8,15 +8,33 @@ type MissionaryType = 'Elders' | 'Sisters' | 'Taylor McKendrick'
 function PasswordEntry({ onCorrectPassword }: { onCorrectPassword: () => void }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showProof, setShowProof] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password === process.env.NEXT_PUBLIC_MISSIONARY_ACCESS_CODE) {
-      onCorrectPassword()
-      setError(false)
-    } else {
+    setIsSubmitting(true)
+    setError(false)
+
+    try {
+      const verifyResponse = await fetch('/api/missionary/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      })
+
+      if (verifyResponse.ok) {
+        onCorrectPassword()
+      } else {
+        setError(true)
+      }
+    } catch (error) {
       setError(true)
+      console.error('Error verifying password:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -26,6 +44,7 @@ function PasswordEntry({ onCorrectPassword }: { onCorrectPassword: () => void })
         <button
           onClick={() => setShowProof(!showProof)}
           className="text-blue-600 hover:text-blue-700 hover:underline focus:outline-none"
+          type="button"
         >
           {showProof ? 'Hide Example' : 'View Example of SMS Notifications'}
         </button>
@@ -67,9 +86,10 @@ function PasswordEntry({ onCorrectPassword }: { onCorrectPassword: () => void })
         )}
         <button
           type="submit"
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          disabled={isSubmitting}
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
         >
-          Access SMS Registration
+          {isSubmitting ? 'Verifying...' : 'Access SMS Registration'}
         </button>
       </form>
     </div>

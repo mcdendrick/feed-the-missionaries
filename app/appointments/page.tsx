@@ -14,7 +14,7 @@ interface Appointment {
 }
 
 function PasswordEntry({ onCorrectPassword, onError }: { 
-  onCorrectPassword: (password: string) => void
+  onCorrectPassword: (token: string) => void
   onError: (error: string) => void 
 }) {
   const [password, setPassword] = useState('')
@@ -25,7 +25,8 @@ function PasswordEntry({ onCorrectPassword, onError }: {
     setIsSubmitting(true)
     
     try {
-      const response = await fetch('/api/missionary/appointments', {
+      // First verify the password
+      const verifyResponse = await fetch('/api/missionary/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,10 +34,11 @@ function PasswordEntry({ onCorrectPassword, onError }: {
         body: JSON.stringify({ password }),
       })
 
-      if (response.ok) {
-        onCorrectPassword(password)
+      if (verifyResponse.ok) {
+        const { sessionToken } = await verifyResponse.json()
+        onCorrectPassword(sessionToken)
       } else {
-        if (response.status === 401) {
+        if (verifyResponse.status === 401) {
           onError('Incorrect password. Please try again.')
         } else {
           onError('An error occurred. Please try again.')
@@ -78,7 +80,7 @@ function PasswordEntry({ onCorrectPassword, onError }: {
   )
 }
 
-function AppointmentList({ password }: { password: string }) {
+function AppointmentList({ sessionToken }: { sessionToken: string }) {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -91,11 +93,16 @@ function AppointmentList({ password }: { password: string }) {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ password }),
+          body: JSON.stringify({ sessionToken }),
         })
         
         if (!response.ok) {
-          throw new Error('Failed to fetch appointments')
+          if (response.status === 401) {
+            setError('Your session has expired. Please refresh the page and log in again.')
+          } else {
+            throw new Error('Failed to fetch appointments')
+          }
+          return
         }
         
         const data = await response.json()
@@ -108,10 +115,10 @@ function AppointmentList({ password }: { password: string }) {
       }
     }
 
-    if (password) {
+    if (sessionToken) {
       fetchAppointments()
     }
-  }, [password])
+  }, [sessionToken])
 
   if (loading) {
     return (
@@ -192,12 +199,12 @@ function AppointmentList({ password }: { password: string }) {
 
 export default function AppointmentsPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [password, setPassword] = useState('')
+  const [sessionToken, setSessionToken] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const handleCorrectPassword = (validPassword: string) => {
+  const handleCorrectPassword = (token: string) => {
     setIsAuthenticated(true)
-    setPassword(validPassword)
+    setSessionToken(token)
     setError(null)
   }
 
@@ -225,7 +232,7 @@ export default function AppointmentsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AppointmentList password={password} />
+        <AppointmentList sessionToken={sessionToken} />
       </div>
     </div>
   )
