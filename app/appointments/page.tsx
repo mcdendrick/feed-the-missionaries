@@ -84,6 +84,38 @@ function AppointmentList({ sessionToken }: { sessionToken: string }) {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deletedAppointments, setDeletedAppointments] = useState<string[]>([])
+
+  useEffect(() => {
+    // Load deleted appointments from localStorage
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('deletedAppointments');
+      if (stored) {
+        setDeletedAppointments(JSON.parse(stored));
+      }
+    }
+  }, []);
+
+  const handleDelete = async (eventId: string) => {
+    try {
+      const response = await fetch('/api/missionary/appointments/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionToken, eventId }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setDeletedAppointments(prev => [...prev, eventId]);
+        // Remove from current appointments
+        setAppointments(prev => prev.filter(a => a.eventId !== eventId));
+      }
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+    }
+  };
 
   useEffect(() => {
     async function fetchAppointments() {
@@ -106,7 +138,11 @@ function AppointmentList({ sessionToken }: { sessionToken: string }) {
         }
         
         const data = await response.json()
-        setAppointments(data.appointments)
+        // Filter out manually deleted appointments
+        const filteredAppointments = data.appointments.filter(
+          (apt: Appointment) => !deletedAppointments.includes(apt.eventId)
+        );
+        setAppointments(filteredAppointments)
       } catch (err) {
         setError('Failed to load appointments. Please try again later.')
         console.error('Error fetching appointments:', err)
@@ -118,7 +154,7 @@ function AppointmentList({ sessionToken }: { sessionToken: string }) {
     if (sessionToken) {
       fetchAppointments()
     }
-  }, [sessionToken])
+  }, [sessionToken, deletedAppointments])
 
   if (loading) {
     return (
@@ -180,13 +216,24 @@ function AppointmentList({ sessionToken }: { sessionToken: string }) {
                 <div key={appointment.eventId} className="p-6 hover:bg-gray-50">
                   <div className="flex items-start justify-between">
                     <div className="space-y-3 flex-grow">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-lg font-medium text-gray-900">
-                          {format(new Date(appointment.startTime), 'h:mm a')}
-                        </span>
-                        <span className="text-lg font-medium text-gray-900">
-                          {appointment.inviteeName}
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-lg font-medium text-gray-900">
+                            {format(new Date(appointment.startTime), 'h:mm a')}
+                          </span>
+                          <span className="text-lg font-medium text-gray-900">
+                            {appointment.inviteeName}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleDelete(appointment.eventId)}
+                          className="text-red-600 hover:text-red-800 focus:outline-none"
+                          title="Remove appointment"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
                       
                       <div className="space-y-1 text-sm text-gray-600">
