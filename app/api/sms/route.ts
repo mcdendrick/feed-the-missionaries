@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { updateMissionaryOptIn } from '@/app/utils/sms';
+import { logConsent } from '@/app/utils/consent-logger';
 import twilio from 'twilio';
 
 export async function POST(request: Request) {
@@ -12,6 +13,15 @@ export async function POST(request: Request) {
     if (body === 'start' || body === 'stop') {
       const optIn = body === 'start';
       const updated = await updateMissionaryOptIn(from, optIn);
+      
+      // Log the consent change
+      await logConsent(
+        from,
+        'unknown', // We don't know the type from SMS commands
+        'sms',     // Using 'sms' as IP address for SMS-based changes
+        optIn ? 'opted_in' : 'opted_out',
+        'sms'
+      );
       
       const message = optIn
         ? 'You have successfully opted in to receive SMS notifications. Reply STOP at any time to opt out.'

@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 
 type MissionaryType = 'Elders' | 'Sisters' | 'Taylor McKendrick'
 
 function PasswordEntry({ onCorrectPassword }: { onCorrectPassword: () => void }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
+  const [showProof, setShowProof] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,33 +21,58 @@ function PasswordEntry({ onCorrectPassword }: { onCorrectPassword: () => void })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-          Enter Missionary Access Code
-        </label>
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          placeholder="Enter access code"
-          required
-        />
+    <div className="space-y-6">
+      <div className="text-center">
+        <button
+          onClick={() => setShowProof(!showProof)}
+          className="text-blue-600 hover:text-blue-700 hover:underline focus:outline-none"
+        >
+          {showProof ? 'Hide Example' : 'View Example of SMS Notifications'}
+        </button>
+        
+        {showProof && (
+          <div className="mt-4 relative max-w-lg mx-auto">
+            <Image
+              src="/proof.png"
+              alt="Example of SMS notifications"
+              width={1000}
+              height={2000}
+              className="mx-auto rounded-lg shadow-lg"
+              style={{ maxHeight: '100vh' }}
+              priority
+            />
+          </div>
+        )}
       </div>
-      {error && (
-        <p className="text-sm text-red-600">
-          Incorrect access code. Please try again or contact your mission leader.
-        </p>
-      )}
-      <button
-        type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-      >
-        Access SMS Registration
-      </button>
-    </form>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            Enter Missionary Access Code
+          </label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            placeholder="Enter access code"
+            required
+          />
+        </div>
+        {error && (
+          <p className="text-sm text-red-600">
+            Incorrect access code. Please try again or contact your mission leader.
+          </p>
+        )}
+        <button
+          type="submit"
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Access SMS Registration
+        </button>
+      </form>
+    </div>
   )
 }
 

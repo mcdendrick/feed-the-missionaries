@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { updateMissionaryOptIn } from '@/app/utils/sms';
+import { logConsent } from '@/app/utils/consent-logger';
 import twilio from 'twilio';
+import { headers } from 'next/headers';
 
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
@@ -12,6 +14,10 @@ const VALID_TYPES = ['Elders', 'Sisters', 'Taylor McKendrick'];
 export async function POST(request: Request) {
   try {
     const { phoneNumber, type } = await request.json();
+    const headersList = headers();
+    const ipAddress = headersList.get('x-forwarded-for') || 
+                     headersList.get('x-real-ip') || 
+                     'unknown';
 
     // Validate phone number format
     if (!phoneNumber.match(/^\+1\d{10}$/)) {
@@ -38,6 +44,9 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    // Log the consent record
+    await logConsent(phoneNumber, type, ipAddress);
 
     // Send confirmation message
     try {
