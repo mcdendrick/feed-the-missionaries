@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SMSOptIn } from './components/SMSOptIn'
 
 export default function Home() {
   return (
@@ -42,6 +43,12 @@ export default function Home() {
                 (626) 665-0251
               </a>
             </p>
+          </div>
+
+          {/* SMS Opt-in Section */}
+          <div className="border-t pt-12">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">For Missionaries</h2>
+            <SMSOptIn />
           </div>
         </div>
       </div>

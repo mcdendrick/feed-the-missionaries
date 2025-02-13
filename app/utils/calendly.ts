@@ -150,7 +150,7 @@ Duration: ${Math.round((new Date(event.end_time).getTime() - new Date(event.star
             console.log('Sending SMS to missionaries:', missionaryMessage);
             
             // Send notification to missionaries
-            const sent = await sendSMSNotification(missionaryMessage, missionaryPhones);
+            const sent = await sendSMSNotification(missionaryMessage);
             
             if (sent) {
               // Only track as processed if SMS was sent successfully
