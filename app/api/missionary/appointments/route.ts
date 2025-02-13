@@ -6,10 +6,10 @@ const validSessions = new Set<string>();
 
 export function addValidSession(token: string) {
   validSessions.add(token);
-  // Expire the token after 24 hours
+  // Expire the token after 7 days
   setTimeout(() => {
     validSessions.delete(token);
-  }, 24 * 60 * 60 * 1000);
+  }, 7 * 24 * 60 * 60 * 1000);
 }
 
 export async function POST(request: Request) {
@@ -24,13 +24,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get events for the next 30 days
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    // Get events for the next 60 days
+    const now = new Date();
+    const sixtyDaysFromNow = new Date();
+    sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
     
     const eventsResponse = await getScheduledEvents(
-      new Date().toISOString(),
-      thirtyDaysFromNow.toISOString()
+      now.toISOString(),
+      sixtyDaysFromNow.toISOString()
     );
 
     if (!eventsResponse?.collection) {
@@ -49,11 +50,17 @@ export async function POST(request: Request) {
             (qa: any) => qa.question.toLowerCase().includes('address')
           );
 
+          // Get phone number from text_reminder_number or questions
+          const phoneNumber = invitee.text_reminder_number || 
+            invitee.questions_and_answers?.find(
+              (qa: any) => qa.question.toLowerCase().includes('phone')
+            )?.answer || null;
+
           return {
             eventId: event.uri,
             inviteeName: invitee.name || 'Unknown',
             email: invitee.email,
-            phoneNumber: invitee.text_reminder_number,
+            phoneNumber: phoneNumber,
             startTime: event.start_time,
             address: addressAnswer?.answer
           };
@@ -64,8 +71,13 @@ export async function POST(request: Request) {
       })
     );
 
-    // Filter out any null appointments from errors
-    const validAppointments = appointments.filter(Boolean);
+    // Filter out any null appointments from errors and past appointments
+    const validAppointments = appointments
+      .filter(Boolean)
+      .filter(appointment => {
+        const appointmentTime = new Date(appointment.startTime);
+        return appointmentTime > now;
+      });
 
     // Sort appointments by start time
     validAppointments.sort((a, b) => 

@@ -145,9 +145,19 @@ function AppointmentList({ sessionToken }: { sessionToken: string }) {
     )
   }
 
+  // Group appointments by date
+  const appointmentsByDate = appointments.reduce((groups, appointment) => {
+    const date = format(new Date(appointment.startTime), 'yyyy-MM-dd');
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(appointment);
+    return groups;
+  }, {} as Record<string, Appointment[]>);
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900">Upcoming Appointments</h2>
         <Link 
           href="/"
@@ -157,41 +167,62 @@ function AppointmentList({ sessionToken }: { sessionToken: string }) {
         </Link>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
-          {appointments.map((appointment) => (
-            <li key={appointment.eventId} className="px-4 py-4 sm:px-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-lg font-medium text-gray-900">
-                    {appointment.inviteeName}
-                  </p>
-                  <p className="text-gray-600">
-                    {format(new Date(appointment.startTime), 'EEEE, MMMM d, yyyy')}
-                  </p>
-                  <p className="text-gray-600">
-                    {format(new Date(appointment.startTime), 'h:mm a')}
-                  </p>
-                  {appointment.address && (
-                    <p className="text-gray-600">
-                      📍 {appointment.address}
-                    </p>
-                  )}
-                  {appointment.phoneNumber && (
-                    <p className="text-gray-600">
-                      📱 {appointment.phoneNumber}
-                    </p>
-                  )}
-                  {appointment.email && (
-                    <p className="text-gray-600">
-                      ✉️ {appointment.email}
-                    </p>
-                  )}
+      <div className="space-y-8">
+        {Object.entries(appointmentsByDate).map(([date, dayAppointments]) => (
+          <div key={date} className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="bg-blue-600 text-white px-6 py-4">
+              <h3 className="text-xl font-semibold">
+                {format(new Date(date), 'EEEE, MMMM d, yyyy')}
+              </h3>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {dayAppointments.map((appointment) => (
+                <div key={appointment.eventId} className="p-6 hover:bg-gray-50">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-3 flex-grow">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg font-medium text-gray-900">
+                          {format(new Date(appointment.startTime), 'h:mm a')}
+                        </span>
+                        <span className="text-lg font-medium text-gray-900">
+                          {appointment.inviteeName}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-1 text-sm text-gray-600">
+                        {appointment.address && (
+                          <p className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {appointment.address}
+                          </p>
+                        )}
+                        {appointment.phoneNumber && (
+                          <p className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            {appointment.phoneNumber}
+                          </p>
+                        )}
+                        {appointment.email && (
+                          <p className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            {appointment.email}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
