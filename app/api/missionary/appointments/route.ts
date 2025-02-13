@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getScheduledEvents, getInviteeDetails } from '@/app/utils/calendly';
+import { isValidSession } from '@/app/utils/session';
 
 // Keep track of valid session tokens
 const validSessions = new Set<string>();
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     const { sessionToken } = await request.json();
     
     // Verify the session token
-    if (!validSessions.has(sessionToken)) {
+    if (!isValidSession(sessionToken)) {
       return NextResponse.json(
         { error: 'Session expired. Please log in again.' },
         { status: 401 }
